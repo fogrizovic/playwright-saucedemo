@@ -2,44 +2,59 @@ package com.saucedemo.factory;
 
 import com.microsoft.playwright.*;
 
-import javax.swing.*;
 import java.util.Locale;
 
 public class PlaywrightFactory {
 
-    Playwright playwright;
-    Browser browser;
-    BrowserContext browserContext;
-    Page page;
+    private static ThreadLocal<Browser> browserThreadLocal = new ThreadLocal<>();
+    private static ThreadLocal<BrowserContext> browserContextThreadLocal = new ThreadLocal<>();
+    private static ThreadLocal<Page> pageThreadLocal = new ThreadLocal<>();
+    private static ThreadLocal<Playwright> playwrightThreadLocal = new ThreadLocal<>();
+
+    public static Playwright getPlaywright(){
+        return playwrightThreadLocal.get();
+    }
+
+    public static Browser getBrowser(){
+        return browserThreadLocal.get();
+    }
+
+    public static BrowserContext getBrowserContext(){
+        return browserContextThreadLocal.get();
+    }
+
+    public static Page getPage(){
+        return pageThreadLocal.get();
+    }
 
     public Page initBrowser(String browserName) {
-        playwright = Playwright.create();
+
+        playwrightThreadLocal.set(Playwright.create());
 
         System.out.println("browser name is: " + browserName);
 
         switch (browserName.toLowerCase(Locale.ROOT)){
             case "chromium":
-                browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+                browserThreadLocal.set(getPlaywright().chromium().launch(new BrowserType.LaunchOptions().setHeadless(false)));
                 break;
             case "firefox":
-                browser = playwright.firefox().launch(new BrowserType.LaunchOptions().setHeadless(false));
+                browserThreadLocal.set(getPlaywright().firefox().launch(new BrowserType.LaunchOptions().setHeadless(false)));
                 break;
             case "safari":
-                browser = playwright.webkit().launch(new BrowserType.LaunchOptions().setHeadless(false));
+                browserThreadLocal.set(getPlaywright().webkit().launch(new BrowserType.LaunchOptions().setHeadless(false)));
                 break;
             case "chrome":
-                browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(false));
+                browserThreadLocal.set(getPlaywright().chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(false)));
                 break;
             default:
                 System.out.println("wrong browser");
         }
 
-        browserContext = browser.newContext();
-        page = browserContext.newPage();
+        browserContextThreadLocal.set(getBrowser().newContext());
+        pageThreadLocal.set(getBrowserContext().newPage());
+        getPage().navigate("https://www.saucedemo.com/");
 
-        page.navigate("https://www.saucedemo.com/");
-
-        return page;
+        return getPage();
 
     }
 }
